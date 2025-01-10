@@ -1,7 +1,6 @@
 /*
-/*
  * TelaPerdeuController.java
- * Controlador da tela de derrota do jogo da forca.
+ * Controlador da tela de derrota do jogo da forca.''
  */
 package controller;
 
