@@ -3,143 +3,115 @@ package controller;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.stage.Stage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
+import java.util.stream.Collectors;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 
 public class TelaTemasController {
 
-    @FXML
-    private CheckBox cbAnimais;
-    @FXML
-    private CheckBox cbAlimentos;
-    @FXML
-    private CheckBox cbDiversos;
-    @FXML
-    private CheckBox cbEsportes;
-    @FXML
-    private CheckBox cbNovelas;
-    @FXML
-    private CheckBox cbObjetos;
-    @FXML
-    private CheckBox cbPC;
-    @FXML
-    private CheckBox cbProfissoes;
-    @FXML
-    private Button btnIniciar;
+    @FXML private CheckBox cbAnimais;
+    @FXML private CheckBox cbAlimentos;
+    @FXML private CheckBox cbDiversos;
+    @FXML private CheckBox cbEsportes;
+    @FXML private CheckBox cbNovelas;
+    @FXML private CheckBox cbObjetos;
+    @FXML private CheckBox cbPC;
+    @FXML private CheckBox cbProfissoes;
+
+    @FXML private Button btnIniciar;
+
+    private static final String CAMINHO_TEMAS = "C:/Users/aline/OneDrive/Documentos/facul/4 semestre/poo/tp/Jogo da Forca/src/temas/"; // Mudar caminho de acordo com o seu
 
     @FXML
-    public void initialize() {
-        btnIniciar.setOnAction(e -> {
-            System.out.println("Temas selecionados:");
-            if (cbAnimais.isSelected())
-                System.out.println("Tema 1 ");
-            if (cbAlimentos.isSelected())
-                System.out.println("Tema 2");
-            if (cbDiversos.isSelected())
-                System.out.println("Tema 3");
-            if (cbEsportes.isSelected())
-                System.out.println("Tema 4");
-            if (cbNovelas.isSelected())
-                System.out.println("Tema 5");
-            if (cbObjetos.isSelected())
-                System.out.println("Tema 6");
-            if (cbPC.isSelected())
-                System.out.println("Tema 7");
-            if (cbProfissoes.isSelected())
-                System.out.println("Tema 8");
-        });
-    }
+    private void handleactionbtnIniciar() {
+        // Obtem os temas selecionados
+        List<String> temasSelecionados = obterTemasSelecionados();
 
-    public void iniciarJogo() {
-        // Inicializa o mapa de palavras por tema dentro deste método
-        Map<String, List<String>> palavrasPorTema = new HashMap<>();
-        palavrasPorTema.put("Animais", new ArrayList<String>() {
-            {
-                add("Cachorro");
-                add("Gato");
-                add("Elefante");
-            }
-        });
-        palavrasPorTema.put("Alimentos", new ArrayList<String>() {
-            {
-                add("Arroz");
-                add("Feijão");
-                add("Pizza");
-            }
-        });
-        palavrasPorTema.put("Diversos", new ArrayList<String>() {
-            {
-                add("Mesa");
-                add("Árvore");
-                add("Lâmpada");
-            }
-        });
-        palavrasPorTema.put("Esportes", new ArrayList<String>() {
-            {
-                add("Futebol");
-                add("Basquete");
-                add("Vôlei");
-            }
-        });
-        palavrasPorTema.put("Novelas", new ArrayList<String>() {
-            {
-                add("Amor");
-                add("Segredo");
-                add("Destino");
-            }
-        });
-        palavrasPorTema.put("Objetos", new ArrayList<String>() {
-            {
-                add("Copo");
-                add("Cadeira");
-                add("Telefone");
-            }
-        });
-        palavrasPorTema.put("PC", new ArrayList<String>() {
-            {
-                add("Teclado");
-                add("Mouse");
-                add("Monitor");
-            }
-        });
-        palavrasPorTema.put("Profissões", new ArrayList<String>() {
-            {
-                add("Médico");
-                add("Engenheiro");
-                add("Professor");
-            }
-        });
-        // Obtém os temas selecionados
-        List<String> temasSelecionados = selecionarTema();
-
-        // Carrega as palavras associadas aos temas selecionados
-        List<String> palavrasParaOJogo = new ArrayList<>();
-        for (String tema : temasSelecionados) {
-            palavrasParaOJogo.addAll(palavrasPorTema.getOrDefault(tema, new ArrayList<>()));
+        if (temasSelecionados.isEmpty()) {
+            System.out.println("Nenhum tema selecionado!");
+            return;
         }
 
-        // Exibe os temas e as palavras selecionadas no console (para teste)
-        System.out.println("Temas selecionados: " + temasSelecionados);
-        System.out.println("Palavras para o jogo: " + palavrasParaOJogo);
+        // Carregar palavras associadas aos temas
+        Map<String[], String> palavrasComTemas = carregarPalavrasDosTemas(temasSelecionados);
 
-        // Lógica de navegação para outra tela pode ser adicionada aqui
+        if (palavrasComTemas.isEmpty()) {
+            System.out.println("Nenhuma palavra encontrada nos arquivos selecionados!");
+            return;
+        }
+
+        // Sortear uma palavra
+        List<String[]> palavras = new ArrayList<>(palavrasComTemas.keySet());
+        Random random = new Random();
+        String[] palavraESuaDica = palavras.get(random.nextInt(palavras.size()));
+        String nomeTema = palavrasComTemas.get(palavraESuaDica); // Tema associado
+
+        // Debug: Exibe palavra, dica e tema
+        System.out.println("Palavra: " + palavraESuaDica[0] + ", Dica: " + palavraESuaDica[1] + ", Tema: " + nomeTema);
+
+        // Abrir tela da Forca
+        abrirTelaForca(palavraESuaDica[0], palavraESuaDica[1], nomeTema);
     }
 
-    public List<String> selecionarTema() {
-        List<String> temasSelecionados = new ArrayList<>();
+    private List<String> obterTemasSelecionados() {
+        List<String> temas = new ArrayList<>();
+        if (cbAnimais.isSelected()) temas.add("Animais");
+        if (cbAlimentos.isSelected()) temas.add("Alimentos");
+        if (cbDiversos.isSelected()) temas.add("Diversos");
+        if (cbEsportes.isSelected()) temas.add("Esportes");
+        if (cbNovelas.isSelected()) temas.add("Novelas");
+        if (cbObjetos.isSelected()) temas.add("Objetos");
+        if (cbPC.isSelected()) temas.add("Pc");
+        if (cbProfissoes.isSelected()) temas.add("Profissoes");
+        return temas;
+    }
 
-        if (cbAnimais.isSelected()) temasSelecionados.add("Animais");
-        if (cbAlimentos.isSelected()) temasSelecionados.add("Alimentos");
-        if (cbDiversos.isSelected()) temasSelecionados.add("Diversos");
-        if (cbEsportes.isSelected()) temasSelecionados.add("Esportes");
-        if (cbNovelas.isSelected()) temasSelecionados.add("Novelas");
-        if (cbObjetos.isSelected()) temasSelecionados.add("Objetos");
-        if (cbPC.isSelected()) temasSelecionados.add("PC");
-        if (cbProfissoes.isSelected()) temasSelecionados.add("Profissões");
+    private Map<String[], String> carregarPalavrasDosTemas(List<String> temasSelecionados) {
+        Map<String[], String> palavrasComTemas = new HashMap<>();
 
-        return temasSelecionados;
-    }
+        for (String tema : temasSelecionados) {
+            String caminhoArquivo = CAMINHO_TEMAS + tema + ".txt";
+            try (BufferedReader br = new BufferedReader(new FileReader(caminhoArquivo))) {
+                String nomeTema = br.readLine(); // Lê a primeira linha do arquivo (nome do tema)
+                if (nomeTema == null) continue;
+
+                palavrasComTemas.putAll(
+                    br.lines()
+                      .map(linha -> linha.split(";"))
+                      .filter(partes -> partes.length == 2)
+                      .collect(Collectors.toMap(partes -> partes, partes -> nomeTema))
+                );
+            } catch (IOException e) {
+                System.err.println("Erro ao carregar o arquivo do tema: " + tema);
+                e.printStackTrace();
+            }
+        }
+        return palavrasComTemas;
+    }
+
+    private void abrirTelaForca(String palavra, String dica, String tema) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/telaForca.fxml"));
+            Parent root = loader.load();
+
+            TelaForcaController forcaController = loader.getController();
+            forcaController.inicializarPalavra(palavra, dica, tema);
+
+            Stage stage = new Stage();
+            stage.setTitle("Jogo da Forca");
+            stage.setScene(new Scene(root));
+            stage.show();
+
+            Stage stageAtual = (Stage) btnIniciar.getScene().getWindow();
+            stageAtual.close();
+        } catch (IOException e) {
+            System.err.println("Erro ao abrir a tela da Forca!");
+            e.printStackTrace();
+        }
+    }
 }
